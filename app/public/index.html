@@ -1,0 +1,130 @@
+<!DOCTYPE>
+<html ng-app="index">
+    <head>
+        <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.7/angular.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap-tpls.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+        <script type="text/javascript" src="javascripts/common.js"></script>
+        <title>Cloud Manager</title>
+        <style>
+            tbody tr td:first-child {
+                width: 50px;
+                background-image: url(images/icon.png);
+                background-repeat: no-repeat;
+            }
+            .stopped {
+                background-position: 0 center;
+            }
+            .running {
+                background-position: -120px center;
+            }
+            .pending {
+                background-position: -60px center;
+            }
+
+        </style>
+    </head>
+    <body ng-controller="aws">
+        <div class="container-fluid">
+            <div class="instances">
+                <div class="navbar">
+                    <form class="form-inline" role="form">
+                        <p class="form-group">
+                            <input type="submit" class="btn btn-success form-control" value="Reload" ng-click="reload();" ng-hide="reloading" />
+                            <img src="images/spinner.gif" ng-show="reloading" />
+                            <input type="text" class="form-control" placeholder="Filter by instance name" ng-model="search" ng-change="filter('word');" />
+                            <button class="btn btn-primary" ng-class="isAll" href="" ng-click="filter('all')">all</button>
+                            <button class="btn btn-primary" ng-class="isRunnings" href="" ng-click="filter('runnings')">runnings</button>
+                            <button class="btn btn-primary" ng-class="isStopped" href="" ng-click="filter('stopped')">stopped</button>
+                        </p>
+                    </form>
+                </div>
+                <p><span>{{runnings}} of {{instances.length}} instances running.</span></p>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center"></th>
+                            <th class="text-center">Name</th>
+                            <th class="text-center">IP</th>
+<!--
+                            <th class="text-center">Region</th>
+-->
+                            <th class="text-center">Type</th>
+                            <th class="text-center">Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="i in instances" ng-show="i.show">
+                            <td class="text-center {{i.status}}"></td>
+                            <td>{{i.name}}</td>
+                            <td class="text-center">{{i.ip}}</td>
+<!--
+                            <td class="text-center">{{i.region}}</td>
+-->
+                            <td class="text-center">{{i.type}}</td>
+                            <td class="text-center">
+                                <input type="submit" class="btn {{i.controlClass}}" ng-hide="processing" ng-click="proc(i.id, i.region);" value="{{i.control}}" />
+                                <img ng-show="processing" src="images/spinner.gif" />
+                                <input type="submit" class="btn btn-info" value="schedule setting" ng-click="openSchedule(i.id, i.name)" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script type="text/ng-template" id="schedule.html">
+            <div class="modal-header">
+                <h2>Schedule Settings for {{name}}</h2>
+            </div>
+            <div class="modal-body">
+                <h3>run schedule</h3>
+                <p>
+                    <input type="checkbox" id="run_{{id}}" ng-model="schedule.run[id].enable" ng-checked="schedule.run[id].enable" /> <label for="run_{{id}}">enable auto run schedule</label>
+                </p>
+                <div ng-show="schedule.run[id].enable">
+                    <input type="checkbox" id="rundaily_{{id}}" ng-model="schedule.run[id].isDaily" ng-checked="schedule.run[id].isDaily" /> <label for="rundaily_{{id}}">repeat daily</label>
+                    <div ng-hide="schedule.run[id].isDaily">
+                        <label for="">date: </label>
+                        <select ng-model="runcron.month" ng-options="month for month in _.range(1,13)"></select>
+                        /
+                        <select ng-model="runcron.day" ng-options="day for day in _.range(1,31)"></select>
+                    </div>
+                    <div>
+                        <label for="">time: </label>
+                        <select ng-model="runcron.hour" ng-options="hour for hour in _.range(0,24)"></select>
+                        :
+                        <select ng-model="runcron.min" ng-options="min for min in _.range(0,60)"></select>
+                    </div>
+                </div>
+                <h3>stop schedule</h3>
+                <p>
+                    <input type="checkbox" id="stop_{{id}}" ng-model="schedule.stop[id].enable" ng-checked="schedule.stop[id].enable" /> <label for="stop_{{id}}">enable auto stop schedule</label>
+                </p>
+                <div ng-show="schedule.stop[id].enable">
+                    <input type="checkbox" id="stopdaily_{{id}}" ng-model="schedule.stop[id].isDaily" ng-checked="schedule.stop[id].isDaily" /> <label for="stopdaily_{{id}}">repeat daily</label>
+                    <div ng-hide="schedule.stop[id].isDaily">
+                        <label for="">date: </label>
+                        <select ng-model="stopcron.month" ng-options="month for month in _.range(0,13)"></select>
+                        /
+                        <select ng-model="stopcron.day" ng-options="day for day in _.range(0,32)"></select>
+                    </div>
+                    <div>
+                        <label for="">time: </label>
+                        <select ng-model="stopcron.hour" ng-options="hour for hour in _.range(0,24)"></select>
+                        :
+                        <select ng-model="stopcron.min" ng-options="min for min in _.range(0,60)"></select>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" ng-click="ok(id)">OK</button>
+                <button class="btn btn-warning" ng-click="cancel(id)">Cancel</button>
+            </div>
+        </script>
+    </body>
+</html>

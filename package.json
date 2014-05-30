@@ -1,0 +1,24 @@
+{
+  "name": "ec2console",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "aws-sdk": "~1.13.0",
+    "express": "~3.4.5",
+    "jade": "~0.35.0",
+    "underscore": "~1.5.2",
+    "ejs": "~0.8.5",
+    "q": "~0.9.7",
+    "grunt": "~0.4.4",
+    "cron": "~1.0.4",
+    "time": "~0.10.0",
+    "grunt-contrib-connect": "~0.7.1",
+    "grunt-contrib-watch": "~0.6.1"
+  }
+}
